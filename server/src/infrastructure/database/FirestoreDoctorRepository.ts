@@ -6,12 +6,62 @@ import { db } from './firestore';
 export class FirestoreDoctorRepository implements IDoctorRepository {
     async findAll(): Promise<Doctor[]> {
         const snapshot = await db.collection('doctors').get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Doctor));
+        const doctors = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Doctor));
+
+        // Fetch reviews and calculate average rating for each doctor
+        const doctorsWithRatings = await Promise.all(
+            doctors.map(async (doctor) => {
+                const reviewsSnapshot = await db.collection('reviews')
+                    .where('doctorId', '==', doctor.id)
+                    .get();
+
+                const reviews = reviewsSnapshot.docs.map(doc => doc.data());
+                const reviewCount = reviews.length;
+
+                let rating: number | undefined = undefined;
+                if (reviewCount > 0) {
+                    const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+                    rating = totalRating / reviewCount;
+                }
+
+                return {
+                    ...doctor,
+                    rating,
+                    reviewCount
+                };
+            })
+        );
+
+        return doctorsWithRatings;
     }
 
     async findById(id: string): Promise<Doctor | null> {
         const doc = await db.collection('doctors').doc(id).get();
         if (!doc.exists) return null;
+
+        const doctor = { id: doc.id, ...doc.data() } as Doctor;
+
+        // Calculate rating from reviews
+        const reviewsSnapshot = await db.collection('reviews')
+            .where('doctorId', '==', id)
+            .get();
+
+        const reviews = reviewsSnapshot.docs.map(doc => doc.data());
+        const reviewCount = reviews.length;
+
+        let rating: number | undefined = undefined;
+        if (reviewCount > 0) {
+            const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+            rating = totalRating / reviewCount;
+        }
+
+        return { ...doctor, rating, reviewCount };
+    }
+
+    async findByUserId(uid: string): Promise<Doctor | null> {
+        const snapshot = await db.collection('doctors').where('uid', '==', uid).limit(1).get();
+        if (snapshot.empty) return null;
+        const doc = snapshot.docs[0];
         return { id: doc.id, ...doc.data() } as Doctor;
     }
 
@@ -50,8 +100,28 @@ export class FirestoreDoctorRepository implements IDoctorRepository {
             );
         }
 
+        // Fetch reviews and calculate average rating for each doctor
+        const doctorsWithRatings = await Promise.all(
+            doctors.map(async (doctor) => {
+                const reviewsSnapshot = await db.collection('reviews')
+                    .where('doctorId', '==', doctor.id)
+                    .get();
+
+                const reviews = reviewsSnapshot.docs.map(doc => doc.data());
+                const reviewCount = reviews.length;
+
+                let rating: number | undefined = undefined;
+                if (reviewCount > 0) {
+                    const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+                    rating = totalRating / reviewCount;
+                }
+
+                return { ...doctor, rating, reviewCount };
+            })
+        );
+
         // Sorting is now handled by the use case, not the repository
-        return doctors;
+        return doctorsWithRatings;
     }
 
 
@@ -66,5 +136,17 @@ export class FirestoreDoctorRepository implements IDoctorRepository {
     async updateSchedule(schedule: DailySchedule): Promise<void> {
         await db.collection('doctors').doc(schedule.doctorId)
             .collection('schedules').doc(schedule.date).set(schedule);
+    }
+
+    async create(doctor: Doctor): Promise<void> {
+        await db.collection('doctors').doc(doctor.id).set(doctor);
+    }
+
+    async update(id: string, doctor: Partial<Doctor>): Promise<void> {
+        await db.collection('doctors').doc(id).update(doctor);
+    }
+
+    async delete(id: string): Promise<void> {
+        await db.collection('doctors').doc(id).delete();
     }
 }

@@ -19,6 +19,7 @@ export class CreateReviewUseCase {
             doctorId: request.doctorId,
             patientId: request.patientId,
             patientName: request.patientName,
+            appointmentId: request.appointmentId,
             rating: request.rating,
             comment: request.comment,
             createdAt: new Date()

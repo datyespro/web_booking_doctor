@@ -25,4 +25,7 @@ export interface Appointment {
     timeText: string;
     status: AppointmentStatus;
     createdAt: Date;
+
+    // Review status (populated when fetching)
+    hasReviewed?: boolean;
 }

@@ -23,7 +23,19 @@ export function useDoctors() {
                 // Convert to ViewModels using presenter
                 const viewModels = doctorPresenter.toViewModelList(domainDoctors);
 
-                setDoctors(viewModels);
+                // Sort by rating (desc) then experience (desc), limit to 6 featured doctors
+                const sortedDoctors = viewModels
+                    .sort((a, b) => {
+                        // First by rating (descending)
+                        if (b.rating !== a.rating) {
+                            return b.rating - a.rating;
+                        }
+                        // Then by experience (descending)
+                        return b.experienceYears - a.experienceYears;
+                    })
+                    .slice(0, 6);
+
+                setDoctors(sortedDoctors);
             } catch (err) {
                 console.error('Failed to fetch doctors:', err);
                 setError('Không thể tải danh sách bác sĩ. Vui lòng thử lại sau.');

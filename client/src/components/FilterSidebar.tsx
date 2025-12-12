@@ -36,6 +36,23 @@ export function FilterSidebar({ filters, onFilterChange, onReset }: FilterSideba
                     searchable
                 />
 
+                <Select
+                    label="Địa điểm"
+                    placeholder="Chọn địa điểm"
+                    value={filters.location || null}
+                    onChange={(value) => onFilterChange({ location: value || undefined })}
+                    data={[
+                        { value: 'Hà Nội', label: 'Hà Nội' },
+                        { value: 'TP. Hồ Chí Minh', label: 'TP. Hồ Chí Minh' },
+                        { value: 'Đà Nẵng', label: 'Đà Nẵng' },
+                        { value: 'Cần Thơ', label: 'Cần Thơ' },
+                        { value: 'Huế', label: 'Huế' },
+                        { value: 'Hải Phòng', label: 'Hải Phòng' },
+                    ]}
+                    clearable
+                    searchable
+                />
+
                 <Title order={6} mt="md">Khoảng giá</Title>
 
                 <NumberInput

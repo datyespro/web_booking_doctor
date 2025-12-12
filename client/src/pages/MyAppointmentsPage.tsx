@@ -1,11 +1,13 @@
-import { Container, Title, Table, Badge, Text, Center, Loader, Paper, Button, Modal, Group, Stack } from '@mantine/core';
+import { Container, Title, Table, Badge, Text, Center, Loader, Paper, Button, Modal, Group, Stack, Textarea, Rating } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { notifications } from '@mantine/notifications';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useAuthStore } from '../stores/auth.store';
 import { useMyAppointments } from '../hooks/useMyAppointments';
 import { useCancelAppointment } from '../hooks/useCancelAppointment';
 import { useDeleteAppointment } from '../hooks/useDeleteAppointment';
+import axiosInstance from '../config/axios';
 
 export default function MyAppointmentsPage() {
     const { user } = useAuthStore();
@@ -15,7 +17,13 @@ export default function MyAppointmentsPage() {
 
     const [opened, { open, close }] = useDisclosure(false);
     const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
+    const [reviewModalOpened, { open: openReviewModal, close: closeReviewModal }] = useDisclosure(false);
     const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
+    const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
+    const [selectedDoctorName, setSelectedDoctorName] = useState<string>('');
+    const [reviewRating, setReviewRating] = useState(0);
+    const [reviewComment, setReviewComment] = useState('');
+    const [reviewLoading, setReviewLoading] = useState(false);
 
     const handleCancelClick = (id: string) => {
         setSelectedAppointmentId(id);
@@ -25,6 +33,15 @@ export default function MyAppointmentsPage() {
     const handleDeleteClick = (id: string) => {
         setSelectedAppointmentId(id);
         openDeleteModal();
+    };
+
+    const handleReviewClick = (appointmentId: string, doctorId: string, doctorName: string) => {
+        setSelectedAppointmentId(appointmentId);
+        setSelectedDoctorId(doctorId);
+        setSelectedDoctorName(doctorName);
+        setReviewRating(0);
+        setReviewComment('');
+        openReviewModal();
     };
 
     const confirmCancel = async () => {
@@ -42,6 +59,34 @@ export default function MyAppointmentsPage() {
                 refetch();
                 closeDeleteModal();
             });
+        }
+    };
+
+    const submitReview = async () => {
+        if (!selectedDoctorId || !selectedAppointmentId || reviewRating === 0) return;
+
+        setReviewLoading(true);
+        try {
+            await axiosInstance.post(`/doctors/${selectedDoctorId}/reviews`, {
+                rating: reviewRating,
+                comment: reviewComment,
+                appointmentId: selectedAppointmentId
+            });
+            notifications.show({
+                title: 'Thành công',
+                message: 'Cảm ơn bạn đã đánh giá bác sĩ!',
+                color: 'green'
+            });
+            closeReviewModal();
+            refetch(); // Refresh to update hasReviewed status
+        } catch (err: any) {
+            notifications.show({
+                title: 'Lỗi',
+                message: err.response?.data?.error || 'Không thể gửi đánh giá',
+                color: 'red'
+            });
+        } finally {
+            setReviewLoading(false);
         }
     };
 
@@ -109,26 +154,41 @@ export default function MyAppointmentsPage() {
                                         </Badge>
                                     </Table.Td>
                                     <Table.Td>
-                                        {(apt.status === 'pending' || apt.status === 'confirmed') && (
-                                            <Button
-                                                color="red"
-                                                variant="subtle"
-                                                size="xs"
-                                                onClick={() => handleCancelClick(apt.id)}
-                                            >
-                                                Hủy
-                                            </Button>
-                                        )}
-                                        {(apt.status === 'cancelled' || apt.status === 'completed') && (
-                                            <Button
-                                                color="gray"
-                                                variant="subtle"
-                                                size="xs"
-                                                onClick={() => handleDeleteClick(apt.id)}
-                                            >
-                                                Xóa
-                                            </Button>
-                                        )}
+                                        <Group gap="xs">
+                                            {apt.status === 'pending' && (
+                                                <Button
+                                                    color="red"
+                                                    variant="subtle"
+                                                    size="xs"
+                                                    onClick={() => handleCancelClick(apt.id)}
+                                                >
+                                                    Hủy
+                                                </Button>
+                                            )}
+                                            {apt.status === 'completed' && !apt.hasReviewed && (
+                                                <Button
+                                                    color="blue"
+                                                    variant="subtle"
+                                                    size="xs"
+                                                    onClick={() => handleReviewClick(apt.id, apt.doctorId, apt.doctorName)}
+                                                >
+                                                    Đánh giá
+                                                </Button>
+                                            )}
+                                            {apt.status === 'completed' && apt.hasReviewed && (
+                                                <Badge color="green" variant="light" size="sm">Đã đánh giá</Badge>
+                                            )}
+                                            {(apt.status === 'cancelled' || apt.status === 'completed') && (
+                                                <Button
+                                                    color="gray"
+                                                    variant="subtle"
+                                                    size="xs"
+                                                    onClick={() => handleDeleteClick(apt.id)}
+                                                >
+                                                    Xóa
+                                                </Button>
+                                            )}
+                                        </Group>
                                     </Table.Td>
                                 </Table.Tr>
                             ))}
@@ -153,6 +213,32 @@ export default function MyAppointmentsPage() {
                     <Group justify="flex-end">
                         <Button variant="default" onClick={closeDeleteModal}>Không</Button>
                         <Button color="red" onClick={confirmDelete} loading={deleteLoading}>Xóa</Button>
+                    </Group>
+                </Stack>
+            </Modal>
+
+            <Modal opened={reviewModalOpened} onClose={closeReviewModal} title={`Đánh giá ${selectedDoctorName}`} centered>
+                <Stack>
+                    <Group>
+                        <Text size="sm">Đánh giá:</Text>
+                        <Rating value={reviewRating} onChange={setReviewRating} />
+                    </Group>
+                    <Textarea
+                        placeholder="Chia sẻ trải nghiệm của bạn..."
+                        value={reviewComment}
+                        onChange={(event) => setReviewComment(event.currentTarget.value)}
+                        minRows={3}
+                    />
+                    <Group justify="flex-end">
+                        <Button variant="default" onClick={closeReviewModal}>Hủy</Button>
+                        <Button
+                            color="blue"
+                            onClick={submitReview}
+                            loading={reviewLoading}
+                            disabled={reviewRating === 0}
+                        >
+                            Gửi đánh giá
+                        </Button>
                     </Group>
                 </Stack>
             </Modal>

@@ -19,11 +19,13 @@ app.get('/', (req, res) => {
 import './infrastructure/database/firestore';
 import doctorRoutes from './interfaces/routes/doctor.routes';
 import appointmentRoutes from './interfaces/routes/appointment.routes';
+import adminRoutes from './interfaces/routes/admin.routes';
 import { errorMiddleware } from './interfaces/middlewares/error.middleware';
 
 // Routes
 app.use('/doctors', doctorRoutes);
 app.use('/appointments', appointmentRoutes);
+app.use('/admin', adminRoutes);
 
 // Error Handling (Must be last)
 app.use(errorMiddleware);
@@ -31,3 +33,4 @@ app.use(errorMiddleware);
 app.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
 });
+// Trigger restart

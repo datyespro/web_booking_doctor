@@ -47,6 +47,9 @@ export class CancelAppointmentUseCase {
             if (appointment.status === AppointmentStatus.COMPLETED) {
                 throw new Error('Cannot cancel completed appointment');
             }
+            if (appointment.status === AppointmentStatus.CONFIRMED) {
+                throw new Error('Không thể hủy lịch hẹn đã được bác sĩ xác nhận. Vui lòng liên hệ trực tiếp với phòng khám.');
+            }
 
             // 4. Get Schedule (READ before WRITE)
             const scheduleRef = db.collection('doctors').doc(appointment.doctorId)

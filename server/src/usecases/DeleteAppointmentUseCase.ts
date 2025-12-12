@@ -9,7 +9,7 @@ export class DeleteAppointmentUseCase {
         private transactionManager: ITransactionManager
     ) { }
 
-    async execute(appointmentId: string, userId: string): Promise<void> {
+    async execute(appointmentId: string, userId: string, userRole: string, doctorId?: string): Promise<void> {
         const appointmentRef = db.collection('appointments').doc(appointmentId);
 
         await this.transactionManager.runTransaction(async (transaction) => {
@@ -25,7 +25,10 @@ export class DeleteAppointmentUseCase {
             }
 
             // Verify Ownership
-            if (appointment.patientId !== userId) {
+            const isPatientOwner = appointment.patientId === userId;
+            const isDoctorOwner = userRole === 'doctor' && appointment.doctorId === doctorId;
+
+            if (!isPatientOwner && !isDoctorOwner) {
                 throw new Error('Unauthorized to delete this appointment');
             }
 

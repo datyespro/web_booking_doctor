@@ -1,5 +1,7 @@
 export interface Doctor {
     id: string;
+    uid?: string; // Linked Firebase User UID
+    email?: string; // Contact email
     name: string;
     departmentId: string; // Link to Department
     specialty?: string; // Keep for backward compatibility or display

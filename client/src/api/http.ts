@@ -19,8 +19,7 @@ api.interceptors.request.use(async (config) => {
             config.headers.Authorization = `Bearer ${token}`;
             console.log('✅ Auth token attached to request');
         } else {
-            console.error('❌ No authenticated user - please login');
-            throw new Error('User not authenticated');
+            console.log('ℹ️ No authenticated user - sending request without token');
         }
     } catch (error) {
         console.error('❌ Error getting auth token:', error);

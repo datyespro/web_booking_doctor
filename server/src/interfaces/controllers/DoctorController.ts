@@ -8,6 +8,10 @@ import type { SearchDoctorFilters } from '../../domain/repositories/IDoctorRepos
 import { CreateReviewUseCase } from '../../usecases/CreateReviewUseCase';
 import { GetDoctorReviewsUseCase } from '../../usecases/GetDoctorReviewsUseCase';
 
+import { GetMyDoctorProfileUseCase } from '../../usecases/GetMyDoctorProfileUseCase';
+
+import { SaveDoctorScheduleUseCase } from '../../usecases/SaveDoctorScheduleUseCase';
+
 import { DoctorPresenter } from '../presenters/DoctorPresenter';
 
 export class DoctorController {
@@ -17,8 +21,26 @@ export class DoctorController {
         private getDoctorScheduleUseCase: GetDoctorScheduleUseCase,
         private searchDoctorsUseCase: SearchDoctorsUseCase,
         private createReviewUseCase: CreateReviewUseCase,
-        private getDoctorReviewsUseCase: GetDoctorReviewsUseCase
+        private getDoctorReviewsUseCase: GetDoctorReviewsUseCase,
+        private getMyDoctorProfileUseCase: GetMyDoctorProfileUseCase,
+        private saveDoctorScheduleUseCase: SaveDoctorScheduleUseCase
     ) { }
+
+    getMyProfile = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const user = req.user!;
+            // Role validation now handled by requireDoctor middleware
+            const doctor = await this.getMyDoctorProfileUseCase.execute(user.uid);
+            if (!doctor) {
+                res.status(404).json({ error: 'Doctor profile not found' });
+                return;
+            }
+
+            res.json(DoctorPresenter.toResponse(doctor));
+        } catch (error) {
+            next(error);
+        }
+    }
 
     getAll = async (req: Request, res: Response, next: NextFunction) => {
         try {
@@ -80,12 +102,13 @@ export class DoctorController {
         try {
             const { id } = req.params;
             const user = req.user!; // Authenticated user
-            const { rating, comment } = req.body;
+            const { rating, comment, appointmentId } = req.body;
 
             const review = await this.createReviewUseCase.execute({
                 doctorId: id,
                 patientId: user.uid,
                 patientName: user.name || user.email || 'Anonymous',
+                appointmentId,
                 rating,
                 comment
             });
@@ -101,6 +124,24 @@ export class DoctorController {
             const { id } = req.params;
             const reviews = await this.getDoctorReviewsUseCase.execute(id);
             res.json(reviews);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    saveSchedule = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const user = req.user!;
+            // Role validation now handled by requireDoctor middleware
+
+            const { date, slots } = req.body;
+            if (!date || !slots) {
+                res.status(400).json({ error: 'Date and slots are required' });
+                return;
+            }
+
+            await this.saveDoctorScheduleUseCase.execute(user.doctorId!, date, slots);
+            res.status(200).json({ message: 'Schedule saved successfully' });
         } catch (error) {
             next(error);
         }

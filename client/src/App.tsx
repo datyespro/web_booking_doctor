@@ -3,9 +3,9 @@ import '@mantine/dates/styles.css';
 import '@mantine/notifications/styles.css';
 
 import { useEffect } from 'react';
-import { MantineProvider, AppShell, Group, Button, Text, Title } from '@mantine/core';
+import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './config/firebase';
 import { useAuthStore } from './stores/auth.store';
@@ -16,61 +16,77 @@ import MyAppointmentsPage from './pages/MyAppointmentsPage';
 import SearchResultsPage from './pages/SearchResultsPage';
 import { DoctorProfilePage } from './pages/DoctorProfilePage';
 
-const Header = () => {
-  const { user, loginWithGoogle, logout } = useAuthStore();
+import { PublicLayout } from './layouts/PublicLayout';
+import DoctorLayout from './layouts/DoctorLayout';
+import { AdminLayout } from './components/layouts/AdminLayout';
 
-  return (
-    <AppShell.Header>
-      <Group h="100%" px="md" justify="space-between">
-        <Link to="/" style={{ textDecoration: 'none' }}>
-          <Title order={3} c="blue">BookingCare</Title>
-        </Link>
-        <Group>
-          <Button variant="subtle" component={Link} to="/search">Tìm bác sĩ</Button>
-          {user ? (
-            <>
-              <Button variant="subtle" component={Link} to="/my-appointments">Lịch hẹn của tôi</Button>
-              <Text fw={500}>Xin chào, {user.displayName}</Text>
-              <Button variant="light" color="red" onClick={logout}>Đăng xuất</Button>
-            </>
-          ) : (
-            <Button onClick={loginWithGoogle}>Đăng nhập</Button>
-          )}
-        </Group>
-      </Group>
-    </AppShell.Header>
-  );
-};
+import DoctorDashboard from './pages/doctor/DoctorDashboard';
+import DoctorAppointmentsPage from './pages/doctor/DoctorAppointmentsPage';
+import DoctorSchedulePage from './pages/doctor/DoctorSchedulePage';
+import DoctorProfileEditPage from './pages/doctor/DoctorProfileEditPage';
+import DoctorLoginPage from './pages/doctor/DoctorLoginPage';
+
+
+import { AdminPatientsPage } from './pages/admin/AdminPatientsPage';
+import { AdminDoctorsPage } from './pages/admin/AdminDoctorsPage';
+
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 export default function App() {
   console.log('App rendering...');
-  const { setUser } = useAuthStore();
+  const { setUser, initializeUser } = useAuthStore();
 
   useEffect(() => {
     console.log('Setting up Auth Listener...');
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       console.log('Auth State Changed:', user?.email);
-      setUser(user);
+      if (user) {
+        initializeUser(user);
+      } else {
+        setUser(null);
+      }
     });
     return () => unsubscribe();
-  }, [setUser]);
+  }, [setUser, initializeUser]);
 
   return (
     <MantineProvider>
       <Notifications />
       <BrowserRouter>
-        <AppShell header={{ height: 60 }} padding="md">
-          <Header />
-          <AppShell.Main>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/search" element={<SearchResultsPage />} />
-              <Route path="/doctors/:id" element={<DoctorProfilePage />} />
+        <Routes>
+          {/* Public Routes (wrapped in PublicLayout) */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/search" element={<SearchResultsPage />} />
+            <Route path="/doctors/:id" element={<DoctorProfilePage />} />
+            <Route path="/doctor/login" element={<DoctorLoginPage />} />
+
+            {/* Protected Routes for Patients (still use PublicLayout) */}
+            <Route element={<ProtectedRoute allowedRoles={['patient', 'admin']} />}>
               <Route path="/booking/:doctorId" element={<BookingPage />} />
               <Route path="/my-appointments" element={<MyAppointmentsPage />} />
-            </Routes>
-          </AppShell.Main>
-        </AppShell>
+            </Route>
+          </Route>
+
+          {/* Doctor Routes (wrapped in DoctorLayout) */}
+          <Route path="/doctor" element={<ProtectedRoute allowedRoles={['doctor']} />}>
+            <Route element={<DoctorLayout />}>
+              <Route index element={<DoctorDashboard />} />
+              <Route path="appointments" element={<DoctorAppointmentsPage />} />
+              <Route path="schedule" element={<DoctorSchedulePage />} />
+              <Route path="profile" element={<DoctorProfileEditPage />} />
+            </Route>
+          </Route>
+
+          {/* Admin Routes (wrapped in AdminLayout) */}
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']} />}>
+            <Route element={<AdminLayout />}>
+              <Route index element={<Navigate to="patients" replace />} />
+              <Route path="patients" element={<AdminPatientsPage />} />
+              <Route path="doctors" element={<AdminDoctorsPage />} />
+            </Route>
+          </Route>
+        </Routes>
       </BrowserRouter>
     </MantineProvider>
   );

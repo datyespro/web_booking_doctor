@@ -30,6 +30,7 @@ export class DoctorPresenter {
             isHighlyRated: doctor.isHighlyRated(),
             experienceLevel: doctor.getExperienceLevelText(),
             experienceYears: doctor.experience || 0,
+            rating: doctor.rating || 0,
 
             clinicAddress: doctor.clinicAddress || 'Chưa cập nhật',
             location: doctor.location,

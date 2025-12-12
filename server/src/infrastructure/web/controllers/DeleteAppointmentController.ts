@@ -7,9 +7,12 @@ export class DeleteAppointmentController {
     async handle(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const userId = (req as any).user.uid; // Assuming auth middleware adds user
+            const user = (req as any).user;
+            const userId = user.uid;
+            const userRole = user.role;
+            const doctorId = user.doctorId;
 
-            await this.deleteAppointmentUseCase.execute(id, userId);
+            await this.deleteAppointmentUseCase.execute(id, userId, userRole, doctorId);
 
             res.status(200).json({ message: 'Appointment deleted successfully' });
         } catch (error: any) {

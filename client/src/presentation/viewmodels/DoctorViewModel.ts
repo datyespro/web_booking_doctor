@@ -17,6 +17,7 @@ export interface DoctorViewModel {
     isHighlyRated: boolean;          // For badges/highlighting
     experienceLevel: string;         // "Bác sĩ chuyên môn cao"
     experienceYears: number;
+    rating: number;                  // Numeric rating for sorting
 
     // Additional info
     clinicAddress: string;
