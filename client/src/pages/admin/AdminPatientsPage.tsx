@@ -88,7 +88,6 @@ export const AdminPatientsPage = () => {
         <Table.Tr key={patient.id}>
             <Table.Td>{patient.displayName}</Table.Td>
             <Table.Td>{patient.email}</Table.Td>
-            <Table.Td>{patient.role}</Table.Td>
             <Table.Td>
                 <Group gap="xs">
                     <ActionIcon variant="subtle" color="blue" onClick={() => handleEdit(patient.id)}>
@@ -125,7 +124,6 @@ export const AdminPatientsPage = () => {
                     <Table.Tr>
                         <Table.Th>Tên</Table.Th>
                         <Table.Th>Email</Table.Th>
-                        <Table.Th>Vai trò</Table.Th>
                         <Table.Th>Thao tác</Table.Th>
                     </Table.Tr>
                 </Table.Thead>

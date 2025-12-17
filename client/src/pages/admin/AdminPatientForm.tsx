@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Modal, TextInput, PasswordInput, Button, Group, Select, LoadingOverlay } from '@mantine/core';
+import { Modal, TextInput, PasswordInput, Button, Group, LoadingOverlay } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { AdminRepository } from '../../repositories/AdminRepository';
@@ -19,7 +19,6 @@ export const AdminPatientForm = ({ opened, onClose, onSuccess, patientId }: Admi
             email: '',
             password: '',
             displayName: '',
-            role: 'patient',
         },
         validate: {
             email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Email không hợp lệ'),
@@ -43,7 +42,6 @@ export const AdminPatientForm = ({ opened, onClose, onSuccess, patientId }: Admi
                         email: patient.email,
                         password: '', // Password not editable directly usually, or handled separately
                         displayName: patient.displayName,
-                        role: patient.role,
                     });
                 })
                 .catch(() => {
@@ -63,7 +61,7 @@ export const AdminPatientForm = ({ opened, onClose, onSuccess, patientId }: Admi
                 // Include password only if provided
                 const updateData = values.password
                     ? values
-                    : { email: values.email, displayName: values.displayName, role: values.role };
+                    : { email: values.email, displayName: values.displayName };
                 await AdminRepository.updatePatient(patientId, updateData);
                 notifications.show({ message: 'Cập nhật bệnh nhân thành công', color: 'green' });
             } else {
@@ -106,16 +104,6 @@ export const AdminPatientForm = ({ opened, onClose, onSuccess, patientId }: Admi
                     required={!patientId}
                     mt="md"
                     {...form.getInputProps('password')}
-                />
-                <Select
-                    label="Vai trò"
-                    placeholder="Chọn vai trò"
-                    data={[
-                        { value: 'patient', label: 'Bệnh nhân' },
-                        { value: 'admin', label: 'Quản trị viên' },
-                    ]}
-                    mt="md"
-                    {...form.getInputProps('role')}
                 />
                 <Group justify="flex-end" mt="xl">
                     <Button variant="default" onClick={onClose}>Hủy</Button>

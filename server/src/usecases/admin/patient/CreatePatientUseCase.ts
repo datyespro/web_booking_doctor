@@ -25,18 +25,20 @@ export class CreatePatientUseCase {
         // 2. Set Custom Claims for role (tamper-proof)
         await this.authService.setCustomClaims(uid, { role: 'patient' });
 
-        // 3. Create User in Firestore
+        // 3. Create User in Firestore - only include defined fields to avoid Firestore undefined error
         const newUser: User = {
             id: uid,
             email: data.email,
             displayName: data.displayName,
-            phoneNumber: data.phoneNumber,
-            address: data.address,
             role: 'patient',
-            dob: data.dob,
-            gender: data.gender,
             createdAt: new Date()
         };
+
+        // Only add optional fields if they have values
+        if (data.phoneNumber) newUser.phoneNumber = data.phoneNumber;
+        if (data.address) newUser.address = data.address;
+        if (data.dob) newUser.dob = data.dob;
+        if (data.gender) newUser.gender = data.gender;
 
         await this.userRepository.create(newUser);
 

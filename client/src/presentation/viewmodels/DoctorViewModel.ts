@@ -9,6 +9,10 @@ export interface DoctorViewModel {
     avatarUrl: string;
     bio: string;
 
+    // Raw values for calculations
+    pricePerVisit: number;
+    experience?: number;
+
     // Formatted display values
     displayRating: string;          // "4.5 ⭐⭐⭐⭐⭐ (120 đánh giá)"
     formattedPrice: string;          // "200,000 VNĐ"

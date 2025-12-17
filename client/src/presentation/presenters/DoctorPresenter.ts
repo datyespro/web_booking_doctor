@@ -22,6 +22,10 @@ export class DoctorPresenter {
             avatarUrl: doctor.avatarUrl || '/default-avatar.png',
             bio: doctor.bio || '',
 
+            // Raw values for calculations
+            pricePerVisit: doctor.pricePerVisit,
+            experience: doctor.experience,
+
             // Use entity business methods for formatting
             displayRating: doctor.getDisplayRating(),
             formattedPrice: doctor.getFormattedPrice(),
