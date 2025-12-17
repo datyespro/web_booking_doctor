@@ -25,7 +25,7 @@ import DoctorAppointmentsPage from './pages/doctor/DoctorAppointmentsPage';
 import DoctorSchedulePage from './pages/doctor/DoctorSchedulePage';
 import DoctorProfileEditPage from './pages/doctor/DoctorProfileEditPage';
 import DoctorLoginPage from './pages/doctor/DoctorLoginPage';
-
+import DoctorReviewsPage from './pages/doctor/DoctorReviewsPage';
 
 import { AdminPatientsPage } from './pages/admin/AdminPatientsPage';
 import { AdminDoctorsPage } from './pages/admin/AdminDoctorsPage';
@@ -74,6 +74,7 @@ export default function App() {
               <Route index element={<DoctorDashboard />} />
               <Route path="appointments" element={<DoctorAppointmentsPage />} />
               <Route path="schedule" element={<DoctorSchedulePage />} />
+              <Route path="reviews" element={<DoctorReviewsPage />} />
               <Route path="profile" element={<DoctorProfileEditPage />} />
             </Route>
           </Route>
