@@ -21,7 +21,7 @@ export const AdminDoctorForm = ({ opened, onClose, onSuccess, doctorId }: AdminD
             name: '',
             specialty: '',
             phone: '',
-            address: '',
+            location: '',
         },
         validate: {
             email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Email không hợp lệ'),
@@ -46,7 +46,7 @@ export const AdminDoctorForm = ({ opened, onClose, onSuccess, doctorId }: AdminD
                         name: doctor.name,
                         specialty: doctor.specialty || '',
                         phone: doctor.phone || '',
-                        address: doctor.address || '',
+                        location: doctor.location || '',
                     });
                 })
                 .catch(() => {
@@ -138,11 +138,16 @@ export const AdminDoctorForm = ({ opened, onClose, onSuccess, doctorId }: AdminD
                     mt="md"
                     {...form.getInputProps('phone')}
                 />
-                <TextInput
-                    label="Địa chỉ"
-                    placeholder="Địa chỉ phòng khám"
+                <Select
+                    label="Địa điểm"
+                    placeholder="Chọn địa điểm"
                     mt="md"
-                    {...form.getInputProps('address')}
+                    data={[
+                        { value: 'Hà Nội', label: 'Hà Nội' },
+                        { value: 'TP. Hồ Chí Minh', label: 'TP. Hồ Chí Minh' },
+                        { value: 'Đà Nẵng', label: 'Đà Nẵng' },
+                    ]}
+                    {...form.getInputProps('location')}
                 />
                 <Group justify="flex-end" mt="xl">
                     <Button variant="default" onClick={onClose}>Hủy</Button>

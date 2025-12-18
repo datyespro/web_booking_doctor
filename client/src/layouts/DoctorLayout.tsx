@@ -1,6 +1,6 @@
 import { AppShell, Burger, Group, NavLink, Title, UnstyledButton, Box, ThemeIcon, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconDashboard, IconCalendar, IconClock, IconUser, IconLogout, IconStar } from '@tabler/icons-react';
+import { IconDashboard, IconCalendar, IconClock, IconLogout, IconStar } from '@tabler/icons-react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth.store';
 
@@ -57,13 +57,6 @@ export default function DoctorLayout() {
                         component={Link}
                         to="/doctor/reviews"
                         active={location.pathname === '/doctor/reviews'}
-                    />
-                    <NavLink
-                        label="AI Chẩn đoán hình ảnh"
-                        leftSection={<IconUser size="1rem" stroke={1.5} />}
-                        component={Link}
-                        to="/doctor/profile"
-                        active={location.pathname === '/doctor/profile'}
                     />
                 </div>
 
